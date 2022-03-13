@@ -2162,6 +2162,20 @@ i.e. the text following the regexp match until the next space character."
         (or outshine-imenu-default-generic-expression
             outshine-imenu-preliminary-generic-expression)))
 
+(defun outshine-imenu-get-tree ()
+  (let ((org-complex-heading-regexp
+         (concat                        ; patterned on how org-complex-heading-regexp is initialized in org
+          "^"
+          (when outshine-regexp-outcommented-p
+            (concat (outshine-calc-comment-region-starter) " "))
+          "\\(\\*+\\)"
+          "\\(?: +" "\\(DONE\\|TODO\\)" "\\)?" ; this is a hack to get the group numbers to line up
+          "\\(?: +\\(\\[#.\\]\\)\\)?"
+          "\\(?: +\\(.*?\\)\\)??"
+          "\\(?:[ \t]+\\(:[[:alnum:]_@#%:]+:\\)\\)?"
+          "[ \t]*$")))
+    (org-imenu-get-tree)
+    ))
 
 (defun outshine-imenu (&optional PREFER-IMENU-P)
   "Convenience function for calling imenu/idomenu from outshine."
@@ -2169,10 +2183,7 @@ i.e. the text following the regexp match until the next space character."
   (or outshine-imenu-default-generic-expression
       (setq outshine-imenu-default-generic-expression
             outshine-imenu-preliminary-generic-expression))
-  (let* ((imenu-generic-expression
-          outshine-imenu-default-generic-expression)
-         (imenu-prev-index-position-function nil)
-         (imenu-extract-index-name-function nil)
+  (let* ((imenu-create-index-function 'outshine-imenu-get-tree)
          (imenu-auto-rescan t)
          (imenu-auto-rescan-maxout 360000))
     ;; prefer idomenu
